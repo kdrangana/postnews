@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>පණිවිඩ (Messages) - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af',
+                            400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c',
+                            800: '#9f1239', 900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass { @apply bg-white bg-opacity-80 backdrop-blur-md border border-gray-100 shadow-xl; }
+        }
+        body { font-family: 'Noto Sans Sinhala', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col lg:flex-row min-h-screen">
+    <div id="navbar-placeholder"></div>
+
+    <main class="flex-grow p-4 md:p-8 lg:p-12 pt-24 lg:pt-8 w-full max-w-7xl mx-auto">
+        <div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">ලැබුණු පණිවිඩ</h1>
+                <p class="text-gray-500 mt-2 font-medium">පාරිභෝගිකයින් විසින් එවන ලද විමසීම් සහ යෝජනා</p>
+            </div>
+        </div>
+
+        <div id="messages-list" class="space-y-6">
+            <!-- Messages will be loaded here -->
+            <div class="animate-pulse space-y-4">
+                <div class="h-32 bg-gray-200 rounded-3xl w-full"></div>
+                <div class="h-32 bg-gray-200 rounded-3xl w-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        requireAuth();
+        requireAdmin();
+    </script>
+    <script src="js/lang.js"></script>
+    <script>
+        const loadMessages = async () => {
+            const list = document.getElementById('messages-list');
+            try {
+                const messages = await getMessages();
+                if (messages.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+                            <div class="text-6xl mb-6">📩</div>
+                            <p class="text-gray-400 text-2xl font-bold">පණිවිඩ කිසිවක් නොමැත.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = messages.map(m => `
+                    <div class="glass rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:border-primary-200 transition-all duration-300">
+                        <div class="flex-grow">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                    ${m.status === 'new' ? 'අලුත්' : 'කියෙව්වා'}
+                                </span>
+                                <span class="text-gray-400 text-xs font-bold">${new Date(m.created_at).toLocaleString('si-LK')}</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-1">${m.name}</h3>
+                            <p class="text-primary-600 text-sm font-bold mb-4">${m.email}</p>
+                            <div class="bg-gray-50 p-5 rounded-2xl text-gray-600 leading-relaxed border border-gray-100 italic">
+                                "${m.message}"
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            ${m.status === 'new' ? `
+                                <button onclick="markAsRead('${m.id}')" class="bg-blue-50 text-blue-600 px-5 py-3 rounded-xl font-bold hover:bg-blue-100 transition whitespace-nowrap">
+                                    කියවූ ලෙස ලකුණු කරන්න
+                                </button>
+                            ` : ''}
+                            <button onclick="handleDelete('${m.id}')" class="bg-red-50 text-red-600 px-5 py-3 rounded-xl font-bold hover:bg-red-100 transition">
+                                මකන්න
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<div class="p-10 text-center text-red-500 font-bold bg-white rounded-2xl border border-red-50">දත්ත පූරණය කිරීමේදී දෝෂයක් ඇති විය.</div>`;
+            }
+        };
+
+        const markAsRead = async (id) => {
+            try {
+                await updateMessageStatus(id, 'read');
+                loadMessages();
+            } catch (err) { alert("දෝෂයක් ඇති විය."); }
+        };
+
+        const handleDelete = async (id) => {
+            if (confirm('මෙම පණිවිඩය මැකීමට ඔබට විශ්වාසද?')) {
+                try {
+                    await deleteMessage(id);
+                    loadMessages();
+                } catch (err) { alert("දැනට මැකිය නොහැක."); }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', loadMessages);
+    </script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ලේඛනාගාරය (Archive) - තැපැල් පුවත්</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2828', 700: '#b91c1c', 900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities { 
+            .glass { @apply bg-white bg-opacity-80 backdrop-blur-md border border-gray-100 shadow-lg; } 
+        }
+        body { font-family: 'Noto Sans Sinhala', sans-serif; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow container mx-auto px-4 py-12 max-w-5xl fade-in">
+        <div class="mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 leading-tight" data-lang="archive">${t('archive')}</h1>
+            <p class="text-gray-500 text-lg md:text-xl font-medium" data-lang="archive_desc">${t('archive_desc')}</p>
+            <div class="h-1.5 w-24 bg-gray-400 mt-6 rounded-full"></div>
+        </div>
+
+        <div id="archive-list" class="space-y-8">
+            <!-- Loading skeleton -->
+            <div class="animate-pulse space-y-6">
+                <div class="h-40 bg-gray-200 rounded-3xl w-full"></div>
+                <div class="h-40 bg-gray-200 rounded-3xl w-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/lang.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const list = document.getElementById('archive-list');
+            try {
+                const posts = await getArchivedPosts();
+                if (posts.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-16 text-center bg-white rounded-3xl shadow-sm border border-gray-100 fade-in">
+                            <div class="text-6xl mb-6">📁</div>
+                            <p class="text-gray-400 text-2xl font-bold" data-lang="archive_empty">${t('archive_empty')}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = posts.map(post => `
+                    <div class="glass rounded-3xl p-6 md:p-8 flex flex-col md:flex-row gap-6 hover:shadow-2xl transition-all duration-300 border-l-4 border-gray-300 group cursor-pointer grayscale hover:grayscale-0" onclick="window.location.href='article.html?id=${post.id}'">
+                        ${post.image ? `
+                            <div class="w-full md:w-32 h-32 md:h-32 rounded-2xl overflow-hidden shrink-0 shadow-inner">
+                                <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                        ` : ''}
+                        <div class="flex-grow flex flex-col justify-center">
+                            <div class="flex items-center text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">
+                                <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full mr-3">${t(post.type)}</span>
+                                <span>${new Date(post.date).toLocaleDateString(getCurrentLang() === 'si' ? 'si-LK' : 'en-US')}</span>
+                            </div>
+                            <h2 class="text-xl md:text-2xl font-bold mb-2 text-gray-700 group-hover:text-primary-600 transition-colors leading-tight">
+                                ${getP(post, 'title')}
+                            </h2>
+                            <p class="text-gray-500 text-sm line-clamp-2 leading-relaxed mb-3">${getP(post, 'content')}</p>
+                            <span class="text-primary-600 font-bold text-xs flex items-center group-hover:translate-x-2 transition-transform">
+                                ${t('read_more')}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `
+                    <div class="p-16 text-center text-red-500 bg-white rounded-3xl border border-red-100 shadow-sm fade-in">
+                        <p class="text-2xl font-bold" data-lang="error_loading">${t('error_loading')}</p>
+                        <p class="text-gray-400 mt-2">${err.message || ''}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>

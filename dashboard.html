@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>පුවත් පුවරුව (Dashboard)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow flex flex-col overflow-y-auto">
+        <div class="p-6 sm:p-10">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <h1 class="text-3xl font-extrabold text-gray-900">සියලුම ප්‍රකාශන</h1>
+                <a href="add-post.html"
+                    class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-md hover:bg-red-700 transition transform hover:-translate-y-0.5 inline-flex items-center">
+                    <span class="mr-2">+</span> නව ප්‍රකාශනයක්
+                </a>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-gray-50 border-b border-gray-100 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="p-4">මාතෘකාව</th>
+                                <th class="p-4">වර්ගය</th>
+                                <th class="p-4">දිනය</th>
+                                <th class="p-4 text-right">ක්‍රියාමාර්ග</th>
+                            </tr>
+                        </thead>
+                        <tbody id="posts-table-body" class="divide-y divide-gray-100">
+                            <!-- Populated via JS -->
+                            <tr>
+                                <td colspan="4" class="p-8 text-center text-gray-500">පූරණය වෙමින් පවතී...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script>
+        requireAuth();
+
+        const getCategoryDetails = (type) => {
+            switch(type) {
+                case 'hot_news': return { label: 'උණුසුම් පුවත්', classes: 'bg-orange-100 text-orange-700' };
+                case 'features': return { label: 'විශේෂාංග', classes: 'bg-purple-100 text-purple-700' };
+                case 'sports': return { label: 'ක්‍රීඩා පිටිය', classes: 'bg-green-100 text-green-700' };
+                case 'overseas': return { label: 'සයුරෙන් එතෙර', classes: 'bg-blue-100 text-blue-700' };
+                case 'news': return { label: 'පුවත්', classes: 'bg-red-100 text-red-700' };
+                case 'announcement': return { label: 'දැනුම්දීම්', classes: 'bg-yellow-100 text-yellow-700' };
+                default: return { label: type, classes: 'bg-gray-100 text-gray-700' };
+            }
+        };
+
+        const loadAdminPosts = async () => {
+            const tbody = document.getElementById('posts-table-body');
+            try {
+                const posts = await getAllPosts();
+                if (posts.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 font-medium">දැනට ප්‍රකාශන නොමැත. නව එකක් එක් කරන්න.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = posts.map(post => {
+                    const cat = getCategoryDetails(post.type);
+                    return `
+                        <tr class="hover:bg-gray-50 transition group">
+                            <td class="p-4">
+                                <div class="font-bold text-gray-800 mb-1 max-w-xs truncate">${post.title}</div>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-3 py-1 text-xs font-bold rounded-full ${cat.classes} uppercase">
+                                    ${cat.label}
+                                </span>
+                            </td>
+                        <td class="p-4 text-sm text-gray-500 whitespace-nowrap">
+                            ${new Date(post.date).toLocaleDateString('si-LK')}
+                        </td>
+                        <td class="p-4 text-right whitespace-nowrap">
+                            ${getUserRole() === 'admin' || post.author === getCurrentUser() ? 
+                                `<div class="flex items-center justify-end space-x-2">
+                                    <a href="edit-post.html?id=${post.id}" class="text-white px-4 py-2 bg-blue-500 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-600 transition focus:outline-none inline-block">
+                                        සංස්කරණය
+                                    </a>
+                                    <button onclick="deletePostHandler(${post.id})" class="text-white px-4 py-2 bg-red-500 rounded-lg text-sm font-bold shadow-sm hover:bg-red-600 transition focus:outline-none cursor-pointer">
+                                        මකන්න
+                                    </button>
+                                </div>` 
+                            : ''}
+                        </td>
+                    </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 font-medium">දෝෂයක් ඇති විය.</td></tr>`;
+            }
+        };
+
+        const deletePostHandler = async (id) => {
+            if (confirm('මෙම ප්‍රකාශනය මැකීමට ඔබට විශ්වාසද?')) {
+                await deletePost(id);
+                loadAdminPosts();
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminPosts();
+        });
+    </script>
+    <script src="js/lang.js"></script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>

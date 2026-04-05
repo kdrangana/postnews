@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>මුල් පිටුව (Home) - තැපැල් පුවත්</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans Sinhala"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2828', 700: '#b91c1c', 900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: 'Noto Sans Sinhala', sans-serif; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .floating { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s ease; }
+        .floating:hover { transform: translateY(-10px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .hero-transition { transition: opacity 1s ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow container mx-auto px-4 py-8 md:py-12 fade-in">
+        
+        <!-- Dynamic Hero Slideshow Section -->
+        <div id="hero-placeholder" class="relative mb-16 h-[450px]">
+            <div class="animate-pulse bg-gray-200 rounded-[2.5rem] h-full shadow-lg"></div>
+        </div>
+
+        <div id="sections-container" class="space-y-24">
+            <!-- Dynamic sections will be loaded here -->
+        </div>
+    </main>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/lang.js"></script>
+    <script>
+        const typeOrder = ['hot_news', 'features', 'sports', 'overseas', 'news', 'announcement'];
+        let heroPosts = [];
+        let currentHeroIndex = 0;
+        let heroInterval = null;
+
+        function updateHeroDisplay() {
+            const heroPlaceholder = document.getElementById('hero-placeholder');
+            if (heroPosts.length === 0 || !heroPlaceholder) return;
+
+            const post = heroPosts[currentHeroIndex];
+            
+            // Generate basic HTML structure for the hero
+            const heroHtml = `
+                <div class="relative rounded-[2.5rem] overflow-hidden shadow-2xl h-full floating group cursor-pointer hero-transition opacity-0" id="current-hero-box" onclick="window.location.href='article.html?id=${post.id}'">
+                    <img src="${post.image || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200'}"
+                        alt="${getP(post, 'title')}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000">
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-900/30 to-transparent"></div>
+                    <div class="absolute bottom-0 p-10 text-white w-full lg:w-3/4">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <span class="px-5 py-1.5 bg-primary-600 text-xs font-bold rounded-full inline-block uppercase tracking-widest shadow-lg">${t('main_news')}</span>
+                            <span class="text-white/60 text-xs font-bold uppercase tracking-tighter">${currentHeroIndex + 1} / ${heroPosts.length}</span>
+                        </div>
+                        <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-[1.1] tracking-tight group-hover:text-red-100 transition-colors italic">
+                            ${getP(post, 'title')}
+                        </h1>
+                        <p class="text-xl text-red-50 font-medium max-w-2xl line-clamp-2">
+                            ${getP(post, 'content')}
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            heroPlaceholder.innerHTML = heroHtml;
+            
+            // Fade in the hero
+            setTimeout(() => {
+                const box = document.getElementById('current-hero-box');
+                if (box) box.classList.remove('opacity-0');
+            }, 50);
+
+            // Set index for next cycle
+            currentHeroIndex = (currentHeroIndex + 1) % heroPosts.length;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('sections-container');
+            if (!container) return;
+            
+            try {
+                const allPosts = await getAllPosts();
+                if (!allPosts || allPosts.length === 0) {
+                    document.getElementById('hero-placeholder').innerHTML = '';
+                    container.innerHTML = `<div class="text-center py-32 bg-white rounded-3xl border border-gray-100 shadow-sm"><p class="text-gray-400 text-2xl font-bold">දැනට පුවත් නොමැත.</p></div>`;
+                    return;
+                }
+
+                // 1. Get Slideshow Posts (Hot News first, then others, max 5)
+                const hotNews = allPosts.filter(p => p.type === 'hot_news');
+                const otherLatest = allPosts.filter(p => p.type !== 'hot_news').slice(0, 5);
+                heroPosts = [...hotNews, ...otherLatest].slice(0, 5);
+
+                // Initial Display
+                updateHeroDisplay();
+
+                // 2. Set 10-second Rotation Interval
+                if (heroPosts.length > 1) {
+                    heroInterval = setInterval(updateHeroDisplay, 10000);
+                }
+
+                // 3. Main Sections
+                const grouped = allPosts.reduce((acc, post) => {
+                    if (!acc[post.type]) acc[post.type] = [];
+                    acc[post.type].push(post);
+                    return acc;
+                }, {});
+
+                container.innerHTML = typeOrder.map(type => {
+                    const posts = grouped[type] || [];
+                    if (posts.length === 0) return '';
+                    const label = typeLabels[type] || 'පුවත්';
+
+                    return `
+                        <section class="fade-in">
+                            <div class="flex justify-between items-end mb-10 border-b-4 border-primary-50 pb-6">
+                                <div>
+                                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">${label}</h2>
+                                    <div class="h-1.5 w-20 bg-primary-600 mt-3 rounded-full"></div>
+                                </div>
+                                <a href="category.html?type=${type}" class="group text-primary-600 font-extrabold hover:text-primary-700 flex items-center text-lg transition-all">
+                                    ${t('see_all')} 
+                                    <svg class="w-6 h-6 ml-2 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                                ${posts.slice(0, 3).map(post => `
+                                    <div class="glass rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 group cursor-pointer border border-gray-100 flex flex-col h-full bg-white" onclick="window.location.href='article.html?id=${post.id}'">
+                                        <div class="h-56 overflow-hidden relative">
+                                            <img src="${post.image || 'https://via.placeholder.com/600x400'}" alt="${getP(post, 'title')}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                                        </div>
+                                        <div class="p-8 flex flex-col flex-grow">
+                                            <div class="flex items-center space-x-3 mb-4">
+                                                <span class="text-gray-400 text-xs font-bold">${new Date(post.date).toLocaleDateString(getCurrentLang() === 'si' ? 'si-LK' : 'en-US')}</span>
+                                            </div>
+                                            <h3 class="text-2xl font-extrabold mb-4 text-gray-800 line-clamp-2 group-hover:text-primary-600 transition-colors leading-tight italic font-serif">
+                                                ${getP(post, 'title')}
+                                            </h3>
+                                            <p class="text-gray-500 text-sm line-clamp-3 mb-6 leading-relaxed flex-grow">
+                                                ${getP(post, 'content')}
+                                            </p>
+                                            <div class="mt-auto pt-6 border-t border-gray-50 flex items-center justify-between">
+                                                <span class="text-xs font-black text-gray-400 italic">${post.author || t('admin')}</span>
+                                                <span class="text-primary-600 font-black text-xs uppercase tracking-tighter group-hover:underline">${t('read_more')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </section>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error("Home loading error:", err);
+                container.innerHTML = `<p class="text-red-500 text-center py-20">දත්ත පූරණය කිරීමේදී දෝෂයක් ඇති විය.</p>`;
+            }
+        });
+    </script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>

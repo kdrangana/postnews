@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>පරිශීලකයින් (Users)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af',
+                            400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c',
+                            800: '#9f1239', 900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow flex flex-col overflow-y-auto">
+        
+
+        <div class="p-6 sm:p-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-6">පරිශීලකයින් කළමනාකරණය</h1>
+
+            <!-- Form -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8 p-6">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">නව පරිශීලකයෙකු එක් කරන්න</h3>
+                <form id="add-user-form" class="flex flex-col sm:flex-row gap-4 items-end">
+                    <div class="flex-grow w-full">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">පරිශීලක නාමය</label>
+                        <input type="text" id="new-username" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-gray-900 bg-gray-50">
+                    </div>
+                    <div class="flex-grow w-full">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">මුරපදය</label>
+                        <input type="password" id="new-password" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-gray-900 bg-gray-50">
+                    </div>
+                    <div class="w-full sm:w-48">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700">භූමිකාව</label>
+                        <select id="new-role" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-gray-900 bg-gray-50">
+                            <option value="user">User (සාමාන්‍ය)</option>
+                            <option value="admin">Admin (පරිපාලක)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition h-[42px] whitespace-nowrap">එක් කරන්න</button>
+                </form>
+            </div>
+
+            <!-- List -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-100 text-sm font-medium text-gray-500 uppercase">
+                                <th class="p-4">පරිශීලක නාමය</th>
+                                <th class="p-4">භූමිකාව</th>
+                                <th class="p-4 text-right">ක්‍රියාමාර්ග</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-gray-100">
+                            <tr>
+                                <td colspan="3" class="p-8 text-center text-gray-500">පූරණය වෙමින් පවතී...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script>
+        requireAuth();
+        requireAdmin();
+
+        const loadUsers = async () => {
+            const tbody = document.getElementById('users-table-body');
+            try {
+                const users = await getAppUsers();
+                tbody.innerHTML = users.map(u => `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-bold text-gray-800">${u.username}</td>
+                        <td class="p-4">
+                            <span class="px-3 py-1 text-xs font-bold rounded-full ${u.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'} uppercase">
+                                ${u.role}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            ${u.username !== getCurrentUser() ? 
+                                `<button onclick="deleteUserHandler(${u.id})" class="text-white px-4 py-2 bg-red-500 rounded-lg text-sm font-bold shadow-sm hover:bg-red-600 transition">
+                                    මකන්න
+                                </button>` 
+                            : '<span class="text-xs text-gray-400">ඔබ</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-red-500">දෝෂයක් ඇති විය.</td></tr>`;
+            }
+        };
+
+        const deleteUserHandler = async (id) => {
+            if (confirm('මෙම පරිශීලකයාව මැකීමට ඔබට විශ්වාසද?')) {
+                await deleteAppUser(id);
+                loadUsers();
+            }
+        };
+
+        document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerText = 'සුරකිනවා...';
+
+            const un = document.getElementById('new-username').value;
+            const pw = document.getElementById('new-password').value;
+            const rl = document.getElementById('new-role').value;
+            try {
+                await addAppUser({ username: un, password: pw, role: rl });
+                document.getElementById('add-user-form').reset();
+                loadUsers();
+            } catch (err) {
+                console.error(err);
+                alert("පරිශීලකයෙකු එක් කිරීම අසාර්ථක විය. සමහරවිට නාමය දැනටමත් පවතී.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'එක් කරන්න';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+    <script src="js/lang.js"></script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>

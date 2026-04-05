@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>පරිපාලක පිවිසුම (Admin Login)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Noto Sans Sinhala', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af',
+                            400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c',
+                            800: '#9f1239', 900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-md w-full">
+        <div class="p-8 sm:p-12">
+            <div class="text-center mb-10">
+                <a href="index.html" class="inline-block mb-4">
+                    <img src="Logo.png" alt="Logo" class="h-20 w-auto object-contain">
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800">පරිපාලක පිවිසුම</h1>
+                <p class="text-gray-500 text-sm mt-2">පද්ධතියට ඇතුළු වීමට ඔබගේ තොරතුරු ලබාදෙන්න</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">පරිශීලක නාමය</label>
+                    <input type="text" id="username"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                        placeholder="admin" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">මුරපදය</label>
+                    <input type="password" id="password"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                        placeholder="password123" required>
+                </div>
+                <div id="error-msg" class="hidden text-red-500 text-sm font-medium text-center bg-red-50 p-3 rounded-lg">
+                    පරිශීලක නාමය හෝ මුරපදය වැරදියි.
+                </div>
+                <button type="submit"
+                    class="w-full py-4 px-6 text-white font-bold bg-red-600 rounded-xl hover:bg-red-700 shadow-md transform transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50">
+                    ඇතුළු වන්න
+                </button>
+            </form>
+            <div class="mt-8 text-center flex flex-col space-y-4">
+                <a href="mailto:kdrangana@gmail.com?subject=Admin Password Reset Request" class="text-sm font-bold text-red-600 hover:text-red-700 transition">මුරපදය අමතකද? (Forgot Password)</a>
+                <a href="index.html" class="text-sm font-medium text-gray-500 hover:text-red-600 transition">← මුල් පිටුවට ආපසු</a>
+            </div>
+        </div>
+    </div>
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            
+            btn.disabled = true;
+            btn.innerText = 'පරික්ෂා කරමින්...';
+            
+            const success = await login(u, p);
+            if (success) {
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = 'ඇතුළු වන්න';
+            }
+        });
+    </script>
+</body>
+</html>

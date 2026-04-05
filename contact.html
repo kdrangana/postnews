@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>සම්බන්ධතා (Contact) - තැපැල් පුවත්</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2828', 700: '#b91c1c', 900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: 'Noto Sans Sinhala', sans-serif; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow container mx-auto px-4 py-8 md:py-16 fade-in">
+        <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100">
+            <!-- Contact Sidebar -->
+            <div class="bg-gradient-to-br from-primary-600 to-red-900 text-white p-8 md:p-12 md:w-2/5 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 leading-tight" data-lang="contact_us">${t('contact_us')}</h2>
+                    <p class="mb-10 text-red-100 text-lg md:text-xl font-medium leading-relaxed" data-lang="contact_desc">${t('contact_desc')}</p>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex items-start">
+                        <div class="bg-white/20 p-2 rounded-lg mr-4 backdrop-blur-sm">📧</div>
+                        <div>
+                            <p class="text-xs font-bold text-red-200 uppercase tracking-widest mb-1" data-lang="email">${t('email')}</p>
+                            <p class="font-bold text-lg leading-tight">supdt.mkt@slpost.lk</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-white/20 p-2 rounded-lg mr-4 backdrop-blur-sm">📞</div>
+                        <div>
+                            <p class="text-xs font-bold text-red-200 uppercase tracking-widest mb-1" data-lang="phone">${t('phone')}</p>
+                            <p class="font-bold text-lg leading-tight">+94 112 695 372</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-white/20 p-2 rounded-lg mr-4 backdrop-blur-sm">📍</div>
+                        <div>
+                            <p class="text-xs font-bold text-red-200 uppercase tracking-widest mb-1" data-lang="address">${t('address')}</p>
+                            <p class="font-bold text-lg leading-tight">No. 310, D.R.Wijewardena Mw, Colombo 01, Sri Lanka</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="p-8 md:p-12 md:w-3/5 bg-white">
+                <form class="space-y-8">
+                    <div class="grid grid-cols-1 gap-8">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide" data-lang="name">${t('name')}</label>
+                            <input type="text" required placeholder="${t('name')}"
+                                class="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-50 outline-none transition text-gray-900 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide" data-lang="email">${t('email')}</label>
+                            <input type="email" required placeholder="example@email.com"
+                                class="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-50 outline-none transition text-gray-900 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide" data-lang="message">${t('message')}</label>
+                            <textarea required rows="5" placeholder="${t('message')}..."
+                                class="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-50 outline-none transition text-gray-900 font-medium resize-none"></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" data-lang="send_message"
+                        class="w-full py-4 bg-primary-600 text-white rounded-2xl font-bold shadow-xl hover:bg-primary-700 transition transform hover:-translate-y-1 active:scale-95 text-lg">
+                        ${t('send_message')}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/lang.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = t('loading');
+
+            const msg = {
+                name: e.target.querySelector('input[type="text"]').value,
+                email: e.target.querySelector('input[type="email"]').value,
+                message: e.target.querySelector('textarea').value
+            };
+
+            try {
+                await addMessage(msg);
+                alert(t('msg_success'));
+                e.target.reset();
+            } catch (err) {
+                console.error(err);
+                alert(t('error_loading'));
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>පුවත සංස්කරණය කිරීම (Edit Post)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af',
+                            400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c',
+                            800: '#9f1239', 900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow py-12 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+                <div class="bg-blue-600 p-10 text-white flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-extrabold mb-2">ප්‍රකාශනය සංස්කරණය කරන්න</h1>
+                        <p class="text-blue-100 font-bold uppercase tracking-widest text-xs">භාෂා තුනෙහිම තොරතුරු යාවත්කාලීන කරන්න</p>
+                    </div>
+                </div>
+
+                <form id="edit-post-form" class="p-10 space-y-12">
+                     <!-- Basic Info -->
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-8 rounded-3xl border border-gray-100">
+                        <div>
+                            <label class="block text-sm font-black text-gray-700 mb-3 uppercase tracking-widest">ප්‍රකාශන වර්ගය</label>
+                            <select id="post-type" required class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none transition font-bold text-gray-800">
+                                <option value="hot_news">උණුසුම් පුවත් (Hot News)</option>
+                                <option value="features">විශේෂාංග (Features)</option>
+                                <option value="sports">ක්‍රීඩා පිටිය (Sports)</option>
+                                <option value="overseas">සයුරෙන් එතෙර (Overseas)</option>
+                                <option value="news">පුවත් (News)</option>
+                                <option value="announcement">දැනුම්දීම් (Announcement)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-black text-gray-700 mb-3 uppercase tracking-widest">නව පින්තූරයක් (විකල්ප)</label>
+                            <input type="file" id="post-image-file" accept="image/*" class="w-full px-5 py-3 bg-white border border-gray-200 rounded-2xl outline-none text-sm font-bold text-gray-500">
+                        </div>
+                    </div>
+
+                    <!-- Tabs Container -->
+                    <div class="space-y-4">
+                        <div class="flex space-x-2 border-b border-gray-100 pb-2">
+                           <button type="button" onclick="switchLangTab('si')" id="tab-si" class="px-6 py-2 rounded-full font-black text-xs uppercase bg-blue-600 text-white shadow-lg transition">Sinhala</button>
+                           <button type="button" onclick="switchLangTab('ta')" id="tab-ta" class="px-6 py-2 rounded-full font-black text-xs uppercase bg-gray-100 text-gray-400 hover:bg-gray-200 transition">Tamil</button>
+                           <button type="button" onclick="switchLangTab('en')" id="tab-en" class="px-6 py-2 rounded-full font-black text-xs uppercase bg-gray-100 text-gray-400 hover:bg-gray-200 transition">English</button>
+                        </div>
+
+                        <!-- Sinhala Section -->
+                        <div id="section-si" class="lang-section space-y-6 animate-fade-in">
+                            <div>
+                                <label class="block text-xs font-black text-blue-600 mb-2 uppercase tracking-widest">SI TITLE / මාතෘකාව</label>
+                                <input type="text" id="post-title" required class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent border-b-gray-200 rounded-2xl focus:border-blue-600 outline-none transition text-2xl font-bold font-serif" placeholder="මෙහි මාතෘකාව ඇතුළත් කරන්න">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-blue-600 mb-2 uppercase tracking-widest">SI CONTENT / අන්තර්ගතය</label>
+                                <textarea id="post-content" required rows="10" class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent border-b-gray-200 rounded-2xl focus:border-blue-600 outline-none transition text-lg font-medium leading-relaxed" placeholder="ප්‍රකාශනයේ විස්තරය..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Tamil Section -->
+                        <div id="section-ta" class="lang-section hidden space-y-6 animate-fade-in">
+                            <div>
+                                <label class="block text-xs font-black text-blue-600 mb-2 uppercase tracking-widest">TA TITLE / தலைப்பு</label>
+                                <input type="text" id="post-title-ta" class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent border-b-gray-200 rounded-2xl focus:border-blue-600 outline-none transition text-2xl font-bold" placeholder="இங்கே தலைப்பை உள்ளிடவும்">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-blue-600 mb-2 uppercase tracking-widest">TA CONTENT / உள்ளடக்கம்</label>
+                                <textarea id="post-content-ta" rows="10" class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent border-b-gray-200 rounded-2xl focus:border-blue-600 outline-none transition text-lg font-medium leading-relaxed" placeholder="விவரங்கள் இங்கே..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- English Section -->
+                        <div id="section-en" class="lang-section hidden space-y-6 animate-fade-in">
+                            <div>
+                                <label class="block text-xs font-black text-blue-600 mb-2 uppercase tracking-widest">EN TITLE / HEADLINE</label>
+                                <input type="text" id="post-title-en" class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent border-b-gray-200 rounded-2xl focus:border-blue-600 outline-none transition text-2xl font-bold" placeholder="Enter headline here">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-blue-600 mb-2 uppercase tracking-widest">EN CONTENT / DESCRIPTION</label>
+                                <textarea id="post-content-en" rows="10" class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent border-b-gray-200 rounded-2xl focus:border-blue-600 outline-none transition text-lg font-medium leading-relaxed" placeholder="Full story in English..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-10 border-t border-gray-100 flex justify-end space-x-6">
+                        <a href="dashboard.html" class="px-8 py-4 text-gray-400 font-black uppercase text-xs tracking-widest hover:text-gray-600 transition">අවලංගු කරන්න</a>
+                        <button type="submit" id="submit-btn" class="px-12 py-5 bg-blue-600 text-white font-black rounded-3xl shadow-2xl hover:bg-blue-700 transition transform hover:-translate-y-1">
+                            යාවත්කාලීන කරන්න
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script src="js/db.js"></script>
+    <script>
+        requireAuth();
+        let postId = null;
+        let currentImage = '';
+
+        function switchLangTab(lang) {
+            document.querySelectorAll('.lang-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`section-${lang}`).classList.remove('hidden');
+            
+            document.querySelectorAll('[id^="tab-"]').forEach(t => {
+                t.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                t.classList.add('bg-gray-100', 'text-gray-400');
+            });
+            const activeTab = document.getElementById(`tab-${lang}`);
+            activeTab.classList.remove('bg-gray-100', 'text-gray-400');
+            activeTab.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            postId = urlParams.get('id');
+            if (!postId) { window.location.href = 'dashboard.html'; return; }
+
+            try {
+                const post = await getPostById(postId);
+                if (!post) { window.location.href = 'dashboard.html'; return; }
+
+                // Check authorization
+                if (getUserRole() !== 'admin' && post.author !== getCurrentUser()) {
+                    window.location.href = 'dashboard.html'; return;
+                }
+
+                document.getElementById('post-title').value = post.title || '';
+                document.getElementById('post-content').value = post.content || '';
+                document.getElementById('post-title-ta').value = post.title_ta || '';
+                document.getElementById('post-content-ta').value = post.content_ta || '';
+                document.getElementById('post-title-en').value = post.title_en || '';
+                document.getElementById('post-content-en').value = post.content_en || '';
+                document.getElementById('post-type').value = post.type;
+                currentImage = post.image || '';
+            } catch (err) {
+                console.error(err);
+                alert('දත්ත ලබාගැනීම අසාර්ථකයි.');
+            }
+        });
+
+        document.getElementById('edit-post-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = 'සුරකිනවා...';
+
+            let imageUrl = currentImage;
+            const fileInput = document.getElementById('post-image-file');
+            if (fileInput.files.length > 0) {
+                try {
+                    imageUrl = await uploadImage(fileInput.files[0]);
+                } catch (err) {
+                    alert('Image upload failed');
+                    btn.disabled = false;
+                    btn.innerText = 'යාවත්කාලීන කරන්න';
+                    return;
+                }
+            }
+
+            const postUpdates = {
+                title: document.getElementById('post-title').value,
+                content: document.getElementById('post-content').value,
+                title_ta: document.getElementById('post-title-ta').value || '',
+                content_ta: document.getElementById('post-content-ta').value || '',
+                title_en: document.getElementById('post-title-en').value || '',
+                content_en: document.getElementById('post-content-en').value || '',
+                type: document.getElementById('post-type').value,
+                image: imageUrl
+            };
+
+            try {
+                await updatePost(postId, postUpdates);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                alert('යාවත්කාලීන කිරීමේදී දෝෂයක් ඇති විය.');
+                btn.disabled = false;
+                btn.innerText = 'යාවත්කාලීන කරන්න';
+            }
+        });
+    </script>
+    <script src="js/lang.js"></script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>

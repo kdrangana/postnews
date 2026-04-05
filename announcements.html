@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>දැනුම්දීම් (Announcements) - තැපැල් පුවත්</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2828', 700: '#b91c1c', 900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities { 
+            .glass { @apply bg-white bg-opacity-80 backdrop-blur-md border border-gray-100 shadow-lg; } 
+        }
+        body { font-family: 'Noto Sans Sinhala', sans-serif; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-grow container mx-auto px-4 py-12 max-w-5xl fade-in">
+        <div class="mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 leading-tight" data-lang="announcement">${t('announcement')}</h1>
+            <p class="text-gray-500 text-lg md:text-xl font-medium" data-lang="announcements_desc">${t('announcements_desc')}</p>
+            <div class="h-1.5 w-24 bg-primary-600 mt-6 rounded-full"></div>
+        </div>
+
+        <div id="announcement-list" class="space-y-8">
+            <!-- Loading skeleton -->
+            <div class="animate-pulse space-y-6">
+                <div class="h-40 bg-gray-200 rounded-3xl w-full"></div>
+                <div class="h-40 bg-gray-200 rounded-3xl w-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/lang.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const list = document.getElementById('announcement-list');
+            try {
+                const posts = await getAllPosts('announcement');
+                if (posts.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-16 text-center bg-white rounded-3xl shadow-sm border border-gray-100 fade-in">
+                            <div class="text-6xl mb-6">🔔</div>
+                            <p class="text-gray-400 text-2xl font-bold" data-lang="no_announcements">දැනට නව දැනුම්දීම් කිසිවක් නොමැත.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = posts.map(post => `
+                    <div class="glass rounded-3xl p-6 md:p-10 flex flex-col md:flex-row gap-8 hover:shadow-2xl transition-all duration-300 border-l-8 border-yellow-400 group cursor-pointer" onclick="window.location.href='article.html?id=${post.id}'">
+                        ${post.image ? `
+                            <div class="w-full md:w-48 h-48 md:h-48 rounded-2xl overflow-hidden shrink-0 shadow-inner">
+                                <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                        ` : ''}
+                        <div class="flex-grow flex flex-col justify-center">
+                            <div class="flex items-center text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest">
+                                <span class="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full mr-3">${t('official_announcement')}</span>
+                                <span>${new Date(post.date).toLocaleDateString(getCurrentLang() === 'si' ? 'si-LK' : 'en-US')}</span>
+                            </div>
+                            <h2 class="text-2xl md:text-3xl font-extrabold mb-4 text-gray-800 group-hover:text-primary-600 transition-colors leading-tight">
+                                ${getP(post, 'title')}
+                            </h2>
+                            <p class="text-gray-500 text-lg line-clamp-2 leading-relaxed mb-4">${getP(post, 'content')}</p>
+                            <span class="text-primary-600 font-bold text-sm flex items-center group-hover:translate-x-2 transition-transform">
+                                ${t('read_more')}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `
+                    <div class="p-16 text-center text-red-500 bg-white rounded-3xl border border-red-100 shadow-sm fade-in">
+                        <p class="text-2xl font-bold" data-lang="error_loading">${t('error_loading')}</p>
+                        <p class="text-gray-400 mt-2">${err.message || ''}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+    <script src="js/navbar.js"></script>
+</body>
+</html>
